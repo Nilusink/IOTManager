@@ -19,7 +19,7 @@ import uvicorn
 import requests
 import time
 
-from ..utils.debugging import debugger, DebugLevel  # , run_with_debug
+from ..utils.debugging import debugger  # , DebugLevel  # , run_with_debug
 from ._datatypes import IOTDevice
 
 
