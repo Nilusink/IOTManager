@@ -10,12 +10,7 @@ Author:
 Nilusink
 """
 from concurrent.futures import ThreadPoolExecutor, Future
-from http import HTTPStatus
-
-from fastapi import FastAPI, HTTPException
-from copy import copy
 import typing as tp
-import uvicorn
 import requests
 import time
 
@@ -36,12 +31,8 @@ class DeviceBuffer:
 
     def __init__(
             self,
-            address: tuple[str, int] = ("0.0.0.0", 12345),
     ) -> None:
         debugger.trace("dev_buf: initializing...")
-
-        # param handling
-        self._address = copy(address)
 
         # variable setup
         self._clients = {}
@@ -50,44 +41,10 @@ class DeviceBuffer:
         # threading
         self._pool = ThreadPoolExecutor(max_workers=8)
 
-        # webserver setup
-        self._app = FastAPI()
-
-        # register endpoints
-        self._setup_routes()
-
         # start background threads
         self._pool.submit(self._device_requester)
 
         debugger.log("dev_buf: initialized")
-
-    def _setup_routes(self):
-        @self._app.get("/device/{device_id}/{endpoint:path}")
-        async def get_device(device_id: int, endpoint: str) -> dict:
-            """
-            forwards device requests
-
-            :param device_id: device request id
-            :param endpoint: normal device endpoint
-            """
-            endpoint = '/' + endpoint.strip().rstrip("/")
-            debugger.trace(f"dev_buf: getting device {device_id}, \"{endpoint}\"")
-
-            data = self.get_device_data(device_id, endpoint)
-
-            if data == -1:
-                debugger.info("dev_buf: invalid endpoint")
-                raise HTTPException(
-                    status_code=HTTPStatus.NOT_FOUND,
-                )
-
-            elif data is ...:
-                debugger.info("dev_buf: no data")
-                raise HTTPException(
-                    status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
-                )
-
-            return data
 
     def _device_requester(self) -> None:
         """
@@ -206,24 +163,6 @@ class DeviceBuffer:
             return -1
 
         return self._clients[device_id]["last_data"][endpoint]
-
-    async def serve(self):
-        """Run this buffer as its own FastAPI server."""
-        config = uvicorn.Config(
-            self._app,
-            host=self._address[0],
-            port=self._address[1],
-            log_level="warning"
-            # log_level={
-            #     # DebugLevel.error: "error",
-            #     # DebugLevel.warning: "warning",
-            #     # DebugLevel.info: "info",
-            #     # DebugLevel.log: "debug",
-            #     # DebugLevel.trace: "trace"
-            # }[debugger.debug_level]
-        )
-        server = uvicorn.Server(config)
-        await server.serve()
 
     def shutdown(self) -> None:
         debugger.trace("dev_buf: shutdown called")

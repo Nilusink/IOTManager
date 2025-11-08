@@ -1,9 +1,18 @@
 from iot_manager.utils.debugging import debugger, DebugLevel
-from iot_manager.core import DeviceBuffer, IOTDevice
+from iot_manager.core import HTTPServer, DeviceBuffer, IOTDevice, DeviceManager
 from time import perf_counter
 from icecream import ic
 # from time import sleep
 import asyncio
+import signal
+import sys
+
+SIGNALS: list[signal.Signals]
+if sys.platform == 'win32':
+    SIGNALS = [signal.SIGINT, signal.SIGTERM]
+
+else:
+    SIGNALS = [signal.SIGINT, signal.SIGTERM, signal.SIGHUP, signal.SIGPIPE]
 
 
 async def main() -> None:
@@ -27,7 +36,10 @@ async def main() -> None:
         debug_level=DebugLevel.log
     )
 
-    # manager setup
+    # manager
+    dev_man = DeviceManager()
+
+    # buffer
     dev_buf = DeviceBuffer()
     dev_buf.add_device(IOTDevice(
         0,
@@ -35,11 +47,33 @@ async def main() -> None:
         ["/weather", "/brightness"]
     ), 2)
 
+    # http server
+    server = HTTPServer(
+        dev_buf,
+        dev_man,
+        ("0.0.0.0", 12345)
+    )
+
+    # cleanup
+    def cleanup(*_, **__) -> None:
+        """
+        correctly stops the program
+        """
+        debugger.log("main: stopping program ...")
+        dev_buf.shutdown()
+        debugger.info("main: IOTManager stopped")
+
+    # register cleanup function for OS interrupts
+    for s in SIGNALS:
+        signal.signal(s, cleanup)
+
+    debugger.info("main: IOTManager started")
+
     try:
-        await asyncio.gather(dev_buf.serve())
+        await asyncio.gather(server.serve())
 
     except KeyboardInterrupt:
-        dev_buf.shutdown()
+        cleanup()
 
 
 if __name__ == '__main__':

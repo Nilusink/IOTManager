@@ -8,11 +8,11 @@ Author:
 Nilusink
 """
 from dataclasses import dataclass
-# import typing as tp
+import typing as tp
 
 
 @dataclass(frozen=True)
 class IOTDevice:
     id: int
     address: tuple[str, int]
-    endpoints: list[str]  # e.g. ["/weather", "/brightness"], ["/"]
+    endpoints: tp.Iterable[str]  # e.g. ["/weather", "/brightness"], ["/"]
