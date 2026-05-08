@@ -16,15 +16,20 @@ from ._datatypes import IOTDevice
 # TODO: replace with proper database!
 DEVICE_DATA: dict[int, IOTDevice] = {
     0: IOTDevice(0, ("192.168.68.10", 80), ("/weather", "/brightness")),
-    1: IOTDevice(1, ("192.168.68.11", 80), ("/weather", "/brightness")),
-    2: IOTDevice(1, ("192.168.68.12", 80), ("/weather", "/brightness")),
-    3: IOTDevice(1, ("192.168.68.13", 80), ("/weather", "/brightness"))
+    1: IOTDevice(1, ("192.168.68.11", 80), ("/weather",)),
+    2: IOTDevice(2, ("192.168.68.12", 80), ("/weather", "/brightness")),
+    3: IOTDevice(3, ("192.168.68.13", 80), ("/weather", "/brightness"))
 }
 
 
 class DeviceManager:
     def __init__(self) -> None:
         self._device_data = DEVICE_DATA
+
+    @property
+    def device_data(self) -> dict[int, IOTDevice]:
+        """get all devices"""
+        return self._device_data.copy()
 
     def get_device(self, device_id: int) -> IOTDevice:
         """

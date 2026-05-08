@@ -41,11 +41,10 @@ async def main() -> None:
 
     # buffer
     dev_buf = DeviceBuffer()
-    dev_buf.add_device(IOTDevice(
-        0,
-        ("192.168.68.10", 80),
-        ["/weather", "/brightness"]
-    ), 2)
+
+    # add device 0 and 1 to request buffer
+    dev_buf.add_device(dev_man.device_data[0], 2)
+    dev_buf.add_device(dev_man.device_data[1], 2)
 
     # http server
     server = HTTPServer(
