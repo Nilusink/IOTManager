@@ -9,6 +9,7 @@ Nilusink
 """
 from copy import copy
 import typing as tp
+import sqlite3
 
 from ._datatypes import IOTDevice
 
